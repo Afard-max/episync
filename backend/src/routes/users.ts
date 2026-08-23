@@ -1,14 +1,39 @@
 import type { FastifyPluginAsync } from "fastify";
 import { timingSafeEqual } from "node:crypto";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../modules/storage/db.js";
 import { users } from "../modules/storage/schema.js";
 import { generateApiKey, hashApiKey } from "../modules/storage/api-key.js";
+import { requireApiKey } from "./auth-middleware.js";
 
 const createUserBodySchema = z.object({
   display_name: z.string().min(1).max(80),
   invite_secret: z.string().min(1),
 });
+
+/**
+ * Solo se persiste el vencimiento del access token (~1h), no el del refresh
+ * token (~1 mes según doc de MAL) — no hay una columna separada para eso.
+ * Aproximación: si el access token venció hace más de lo que dura un
+ * refresh token, asumimos que el refresh también venció ("expirado"). Es
+ * una heurística, no un dato exacto; se puede refinar más adelante si al
+ * implementar el refresh real (§5.1) MAL devuelve una señal más precisa
+ * (ej. un intento de refresh que falla con invalid_grant).
+ */
+const REFRESH_TOKEN_APPROX_LIFETIME_MS = 30 * 24 * 60 * 60 * 1000;
+
+function computeMalConnectionStatus(
+  hasTokens: boolean,
+  accessTokenExpiresAt: Date | null
+): "conectado" | "expirado" | "no_conectado" {
+  if (!hasTokens) return "no_conectado";
+  if (!accessTokenExpiresAt) return "conectado";
+  const msSinceExpiry = Date.now() - accessTokenExpiresAt.getTime();
+  return msSinceExpiry > REFRESH_TOKEN_APPROX_LIFETIME_MS
+    ? "expirado"
+    : "conectado";
+}
 
 const usersRoutes: FastifyPluginAsync = async (app) => {
   app.post("/users", async (request, reply) => {
@@ -58,6 +83,37 @@ const usersRoutes: FastifyPluginAsync = async (app) => {
       api_key: apiKey,
     });
   });
+
+  app.get(
+    "/users/me",
+    { preHandler: requireApiKey },
+    async (request, reply) => {
+      const authenticatedUser = request.user!;
+
+      const [fullUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, authenticatedUser.id))
+        .limit(1);
+
+      if (!fullUser) {
+        return reply.status(404).send({
+          error: "user_not_found",
+          message: "El usuario autenticado ya no existe.",
+        });
+      }
+
+      return reply.send({
+        user_id: fullUser.id,
+        display_name: fullUser.displayName,
+        mal_connection_status: computeMalConnectionStatus(
+          fullUser.malAccessTokenEnc !== null,
+          fullUser.malTokenExpiresAt
+        ),
+        created_at: fullUser.createdAt.toISOString(),
+      });
+    }
+  );
 };
 
 export default usersRoutes;
