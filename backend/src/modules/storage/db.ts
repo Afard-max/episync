@@ -12,13 +12,19 @@ if (!connectionString) {
   );
 }
 
-// ssl se pasa explícito, no se depende de que postgres.js interprete
-// "sslmode=require" embebido en la URL (comportamiento no garantizado
-// igual al de drizzle-kit, que sí lo tomó de la URL sin problema).
-// connect_timeout evita que una conexión que nunca cierra deje el server
-// colgado para siempre en vez de fallar con un error claro.
+// ssl como objeto explícito, no el string "require": necesitamos forzar
+// maxVersion TLSv1.2 porque TLS 1.3 negocia por defecto el grupo híbrido
+// post-cuántico X25519MLKEM768 (disponible en OpenSSL 3.5+), que tiene un
+// problema de interoperabilidad confirmado con el proxy TLS de Render — el
+// handshake completa pero la conexión se corta al enviar el primer mensaje
+// de protocolo real. Verificado manualmente con psql forzando TLS 1.2 antes
+// de aplicar este fix. rejectUnauthorized:false replica la semántica de
+// sslmode=require de libpq (cifra, no verifica cadena de certificados).
 const queryClient = postgres(connectionString, {
-  ssl: "require",
+  ssl: {
+    rejectUnauthorized: false,
+    maxVersion: "TLSv1.2",
+  },
   connect_timeout: 10,
 });
 
