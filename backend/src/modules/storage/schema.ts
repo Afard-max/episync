@@ -52,6 +52,15 @@ export const users = pgTable("users", {
   malAccessTokenEnc: bytea("mal_access_token_enc"),
   malRefreshTokenEnc: bytea("mal_refresh_token_enc"),
   malTokenExpiresAt: timestamp("mal_token_expires_at", { withTimezone: true }),
+  // No está en el SDD §3.5.1 original: el contrato §3.1 exige devolver "la
+  // temporada marcada como activa" cuando se omite season_label en
+  // GET /watchlist, pero ningún documento original definía dónde vive esa
+  // marca. Decisión explícita del usuario (no heurística): campo propio en
+  // User, nullable porque un usuario recién dado de alta aún no tiene
+  // ninguna temporada. Se setea vía PATCH /users/me/active-season, y
+  // automáticamente la primera vez que el usuario crea contenido en una
+  // temporada (ver watchlist.ts) si todavía no tenía ninguna.
+  activeSeasonLabel: varchar("active_season_label", { length: 40 }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -89,6 +98,16 @@ export const scanRuns = pgTable("scan_runs", {
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
+  // No está en el SDD §3.5.1 original (que solo lista id/user_id/started_at/
+  // finished_at/status para ScanRun) — hueco real entre el modelo de datos
+  // y el contrato: §4.1 crea cada ScanRun scopeado a una season_label
+  // (viene en el body del POST), y §4.3 exige poder filtrar el historial
+  // por season_label. Sin esta columna, filtrar requeriría un JOIN contra
+  // scan_results -> watchlist_items, que además falla si un ScanRun no
+  // produjo ningún resultado (watchlist vacía en esa temporada al momento
+  // del escaneo). Se agrega como campo explícito, mismo criterio ya
+  // aplicado a users.active_season_label.
+  seasonLabel: varchar("season_label", { length: 40 }).notNull(),
   status: scanRunStatusEnum("status").notNull().default("en_progreso"),
   startedAt: timestamp("started_at", { withTimezone: true })
     .notNull()
