@@ -12,35 +12,50 @@ interface StatePayload {
   issuedAt: number;
 }
 
-const STATE_TTL_MS = 10 * 60 * 1000; // 10 minutos: tiempo razonable para que el usuario complete el login en MAL
+export const STATE_TTL_MS = 10 * 60 * 1000; // 10 minutos: tiempo razonable para que el usuario complete el login en MAL
 
 function sign(data: string, secret: string): string {
   return createHmac("sha256", secret).update(data).digest("base64url");
 }
 
-export function signOauthState(userId: string, secret: string): string {
+export interface SignedOauthState {
+  state: string;
+  nonce: string;
+}
+
+export function signOauthState(userId: string, secret: string): SignedOauthState {
+  const nonce = randomUUID();
   const payload: StatePayload = {
     userId,
-    nonce: randomUUID(),
+    nonce,
     issuedAt: Date.now(),
   };
   const encodedPayload = Buffer.from(JSON.stringify(payload)).toString(
     "base64url"
   );
   const signature = sign(encodedPayload, secret);
-  return `${encodedPayload}.${signature}`;
+  return { state: `${encodedPayload}.${signature}`, nonce };
+}
+
+export interface VerifiedOauthState {
+  userId: string;
+  nonce: string;
 }
 
 /**
- * Devuelve el userId si el state es válido (firma correcta y no vencido),
- * o null si fue alterado, corresponde a otro secret, o expiró.
+ * Devuelve {userId, nonce} si el state es válido (firma correcta y no
+ * vencido), o null si fue alterado, corresponde a otro secret, o expiró.
+ * El nonce se necesita en el callback (§2.2) para encontrar la fila de
+ * oauth_pending_authorizations que guarda el code_verifier de este intento
+ * puntual — no alcanza con el userId porque puede haber varios intentos
+ * en paralelo (ver comentario en schema.ts sobre oauthPendingAuthorizations).
  * Nunca lanza: un state inválido es un caso esperado (ataque, doble-click,
  * link viejo), no una excepción del sistema.
  */
 export function verifyOauthState(
   state: string,
   secret: string
-): string | null {
+): VerifiedOauthState | null {
   const parts = state.split(".");
   if (parts.length !== 2) return null;
   const [encodedPayload, signature] = parts;
@@ -52,7 +67,7 @@ export function verifyOauthState(
     signatureBuffer.length !== expectedBuffer.length ||
     !timingSafeEqual(signatureBuffer, expectedBuffer)
   ) {
-    return null; // comparación en tiempo constante: evita timing attacks
+    return null;
   }
 
   let payload: StatePayload;
@@ -64,5 +79,5 @@ export function verifyOauthState(
 
   if (Date.now() - payload.issuedAt > STATE_TTL_MS) return null;
 
-  return payload.userId;
+  return { userId: payload.userId, nonce: payload.nonce };
 }

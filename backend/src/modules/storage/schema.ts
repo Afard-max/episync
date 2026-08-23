@@ -111,3 +111,29 @@ export const scanResults = pgTable("scan_results", {
   confirmed: boolean("confirmed").notNull().default(false),
   confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
 });
+
+/**
+ * No está en el SDD original (§3.5.1 solo lista las 4 entidades del contrato
+ * de negocio) — es una tabla de soporte técnico para el flujo OAuth §2.1/§2.2:
+ * el code_verifier de PKCE tiene que sobrevivir entre la llamada a
+ * authorize-url y el callback, que llegan en requests HTTP distintos.
+ *
+ * Se liga al "nonce" embebido en el state firmado (oauth-state.ts), no
+ * directamente al userId: así, si el usuario arranca el flujo de login dos
+ * veces sin terminar el primero, cada intento tiene su propia fila en vez
+ * de que el segundo pise el code_verifier del primero.
+ */
+export const oauthPendingAuthorizations = pgTable(
+  "oauth_pending_authorizations",
+  {
+    nonce: varchar("nonce", { length: 64 }).primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    codeVerifier: varchar("code_verifier", { length: 128 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  }
+);
