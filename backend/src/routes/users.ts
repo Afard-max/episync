@@ -110,8 +110,40 @@ const usersRoutes: FastifyPluginAsync = async (app) => {
           fullUser.malAccessTokenEnc !== null,
           fullUser.malTokenExpiresAt
         ),
+        active_season_label: fullUser.activeSeasonLabel,
         created_at: fullUser.createdAt.toISOString(),
       });
+    }
+  );
+
+  // No está en el contrato original (§1 solo documenta POST /users y
+  // GET /users/me) — endpoint nuevo, necesario porque §3.1 depende de que
+  // exista una forma de setear la temporada activa (ver nota en
+  // schema.ts sobre activeSeasonLabel). Decisión propia documentada, no
+  // silenciosa: se agrega bajo /users/me por coherencia con el resto de
+  // la gestión de la cuenta autenticada, no bajo /watchlist porque es un
+  // dato de configuración del usuario, no del watchlist en sí.
+  app.patch(
+    "/users/me/active-season",
+    { preHandler: requireApiKey },
+    async (request, reply) => {
+      const user = request.user!;
+      const bodySchema = z.object({ season_label: z.string().min(1).max(40) });
+      const parsed = bodySchema.safeParse(request.body);
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: "validation_error",
+          message: "season_label inválida.",
+          details: parsed.error.flatten(),
+        });
+      }
+
+      await db
+        .update(users)
+        .set({ activeSeasonLabel: parsed.data.season_label })
+        .where(eq(users.id, user.id));
+
+      return reply.send({ active_season_label: parsed.data.season_label });
     }
   );
 };

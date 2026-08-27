@@ -1,0 +1,173 @@
+@import "tailwindcss";
+
+/* ============================================================
+   EpisoSync — Sistema de diseño
+   Dirección validada por el usuario: glassmorphism, paleta pastel
+   de 6 colores, dark/light conmutable, filmstrip como elemento de
+   firma (ver FilmstripProgress, próximo chunk).
+
+   Paleta (nombrada, no genérica):
+     mist  #EAF1FB — superficie fría clara, base del modo claro
+     dusk  #5B6478 — neutro slate, texto secundario / bordes
+     coral #FF8A73 — acento primario, también outcome "error"
+     ink   #14161F — neutro profundo, base del modo oscuro
+     mint  #86E6C8 — outcome "ok" / éxito
+     amber #FFC773 — outcome "advertencia"
+   ============================================================ */
+
+@theme {
+  --font-display: "Space Grotesk", "Space Grotesk Fallback", sans-serif;
+  --font-body: "IBM Plex Sans", "IBM Plex Sans Fallback", sans-serif;
+  --font-mono: "IBM Plex Mono", "IBM Plex Mono Fallback", monospace;
+
+  --color-mist: #eaf1fb;
+  --color-mist-dim: #d7e3f5;
+  --color-dusk: #5b6478;
+  --color-dusk-dim: #8891a3;
+  --color-coral: #ff8a73;
+  --color-coral-dim: #ffb3a3;
+  --color-ink: #14161f;
+  --color-ink-dim: #1e212e;
+  --color-mint: #86e6c8;
+  --color-mint-dim: #b6f0dd;
+  --color-amber: #ffc773;
+  --color-amber-dim: #ffdca6;
+}
+
+/* Fuentes — pesos concretos, no toda la familia. */
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("https://fonts.gstatic.com/s/spacegrotesk/v21/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj7oUXskPMBBSSJLm2E.woff2")
+    format("woff2");
+  font-weight: 500 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("https://fonts.gstatic.com/s/ibmplexsans/v20/zYX9KVElMYYaJe8bpLHnCwDKtdiIN9EE7q4A.woff2")
+    format("woff2");
+  font-weight: 400 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("https://fonts.gstatic.com/s/ibmplexmono/v19/-F63fjptAgt5VM-kVkqdyU8n1i8q131nj-otFQ.woff2")
+    format("woff2");
+  font-weight: 400 500;
+  font-display: swap;
+}
+
+/* ------------------------------------------------------------
+   Temas — variables semánticas que sí cambian entre claro/oscuro.
+   El atributo data-theme lo controla ThemeContext (persistido en
+   localStorage). Default a oscuro si no hay preferencia guardada
+   ni preferencia de sistema clara.
+   ------------------------------------------------------------ */
+:root,
+[data-theme="dark"] {
+  --bg-base: var(--color-ink);
+  --bg-elevated: var(--color-ink-dim);
+  --text-primary: var(--color-mist);
+  --text-secondary: var(--color-dusk-dim);
+  --glass-surface: rgb(234 241 251 / 6%);
+  --glass-border: rgb(234 241 251 / 12%);
+  --glass-highlight: rgb(255 255 255 / 8%);
+  --accent: var(--color-coral);
+  --accent-contrast: var(--color-ink);
+}
+
+[data-theme="light"] {
+  --bg-base: var(--color-mist);
+  --bg-elevated: #ffffff;
+  --text-primary: var(--color-ink);
+  --text-secondary: var(--color-dusk);
+  --glass-surface: rgb(255 255 255 / 45%);
+  --glass-border: rgb(20 22 31 / 8%);
+  --glass-highlight: rgb(255 255 255 / 60%);
+  --accent: var(--color-coral);
+  --accent-contrast: #ffffff;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --bg-base: var(--color-mist);
+    --bg-elevated: #ffffff;
+    --text-primary: var(--color-ink);
+    --text-secondary: var(--color-dusk);
+    --glass-surface: rgb(255 255 255 / 45%);
+    --glass-border: rgb(20 22 31 / 8%);
+    --glass-highlight: rgb(255 255 255 / 60%);
+    --accent: var(--color-coral);
+    --accent-contrast: #ffffff;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--glass-border);
+  }
+  html {
+    color-scheme: dark light;
+  }
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    transition:
+      background-color 0.25s ease,
+      color 0.25s ease;
+    min-height: 100dvh;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  /* Panel de vidrio esmerilado — la base de todo el lenguaje visual. */
+  .glass-panel {
+    background: var(--glass-surface);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    box-shadow:
+      0 1px 0 0 var(--glass-highlight) inset,
+      0 8px 32px -12px rgb(0 0 0 / 35%);
+  }
+
+  .glass-panel-sm {
+    background: var(--glass-surface);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+  }
+
+  /* Fondo ambiental con manchas de color pastel difuminadas detrás del
+     glass — es lo que hace que el blur del panel se note. */
+  .ambient-glow {
+    background-image:
+      radial-gradient(
+        circle at 15% 20%,
+        color-mix(in srgb, var(--color-coral) 35%, transparent),
+        transparent 45%
+      ),
+      radial-gradient(
+        circle at 85% 15%,
+        color-mix(in srgb, var(--color-mint) 30%, transparent),
+        transparent 45%
+      ),
+      radial-gradient(
+        circle at 50% 90%,
+        color-mix(in srgb, var(--color-amber) 25%, transparent),
+        transparent 50%
+      );
+  }
+}

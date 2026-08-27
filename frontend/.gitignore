@@ -1,0 +1,13 @@
+node_modules
+dist
+dist-ssr
+.env
+*.local
+
+# editores
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# vite-plugin-pwa genera esto en build, no se versiona
+dev-dist
