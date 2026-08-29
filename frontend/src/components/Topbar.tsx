@@ -49,7 +49,7 @@ export function Topbar() {
         <button
           onClick={toggleTheme}
           aria-label={`Cambiar a modo ${theme === "dark" ? "claro" : "oscuro"}`}
-          className="glass-panel-sm rounded-full h-9 w-9 flex items-center justify-center hover:brightness-110 transition"
+          className="glass-panel-sm rounded-full h-11 w-11 flex items-center justify-center hover:brightness-110 transition"
         >
           {theme === "dark" ? "☀︎" : "☾"}
         </button>

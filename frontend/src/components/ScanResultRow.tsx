@@ -31,15 +31,19 @@ export function ScanResultRow({
   return (
     <li className="glass-panel rounded-2xl p-4 flex items-center gap-4 flex-wrap">
       {!result.confirmed && (
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={onToggleSelect}
-          disabled={!isSelectable}
-          className="h-5 w-5 accent-current shrink-0"
-          style={{ color: "var(--accent)" }}
+        <label
+          className="flex h-11 w-11 -m-3 shrink-0 items-center justify-center cursor-pointer"
           aria-label={`Seleccionar ${result.site_title}`}
-        />
+        >
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={onToggleSelect}
+            disabled={!isSelectable}
+            className="h-5 w-5 accent-current"
+            style={{ color: "var(--accent)" }}
+          />
+        </label>
       )}
 
       <div className="min-w-0 flex-1">

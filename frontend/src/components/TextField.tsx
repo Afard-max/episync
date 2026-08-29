@@ -20,7 +20,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
         <input
           ref={ref}
           id={inputId}
-          className={`glass-panel-sm rounded-xl px-4 py-2.5 outline-none placeholder:opacity-40 ${className}`}
+          className={`glass-panel-sm rounded-xl px-4 py-2.5 placeholder:opacity-40 ${className}`}
           style={{ color: "var(--text-primary)" }}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? `${inputId}-error` : undefined}

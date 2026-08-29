@@ -74,6 +74,8 @@
   --glass-highlight: rgb(255 255 255 / 8%);
   --accent: var(--color-coral);
   --accent-contrast: var(--color-ink);
+  /* coral sobre ink: 7.85:1 — sobra contra el mínimo 3:1 de WCAG 1.4.11 */
+  --focus-ring: var(--color-coral);
 }
 
 [data-theme="light"] {
@@ -86,6 +88,11 @@
   --glass-highlight: rgb(255 255 255 / 60%);
   --accent: var(--color-coral);
   --accent-contrast: #ffffff;
+  /* coral sobre mist da 2.02:1 (calculado) — por debajo del mínimo 3:1
+     de WCAG 1.4.11 para indicadores de foco. dusk sobre mist da 5.22:1,
+     así que en modo claro el foco usa un color propio, distinto del
+     acento visual, en vez de --accent. */
+  --focus-ring: var(--color-dusk);
 }
 
 @media (prefers-color-scheme: light) {
@@ -99,6 +106,7 @@
     --glass-highlight: rgb(255 255 255 / 60%);
     --accent: var(--color-coral);
     --accent-contrast: #ffffff;
+    --focus-ring: var(--color-dusk);
   }
 }
 
@@ -126,7 +134,7 @@
     letter-spacing: -0.01em;
   }
   :focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--focus-ring);
     outline-offset: 2px;
   }
 }

@@ -21,7 +21,7 @@ export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(
         <select
           ref={ref}
           id={selectId}
-          className={`glass-panel-sm rounded-xl px-3 py-2.5 outline-none ${className}`}
+          className={`glass-panel-sm rounded-xl px-3 py-2.5 ${className}`}
           style={{ color: "var(--text-primary)" }}
           {...rest}
         >

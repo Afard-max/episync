@@ -73,7 +73,7 @@ export function WatchlistConfigRow({
             value={malAnimeId}
             onChange={(e) => setMalAnimeId(e.target.value)}
             onBlur={() => commitIfChanged("mal_anime_id")}
-            className="glass-panel-sm rounded-xl px-3 py-2 w-28 outline-none"
+            className="glass-panel-sm rounded-xl px-3 py-2 w-28"
             style={{ color: "var(--text-primary)" }}
           />
         </label>
@@ -86,12 +86,13 @@ export function WatchlistConfigRow({
             value={currentEpisode}
             onChange={(e) => setCurrentEpisode(e.target.value)}
             onBlur={() => commitIfChanged("current_episode")}
-            className="glass-panel-sm rounded-xl px-3 py-2 w-24 outline-none"
+            className="glass-panel-sm rounded-xl px-3 py-2 w-24"
             style={{ color: "var(--text-primary)" }}
           />
         </label>
 
         <SelectField
+          aria-label="Estado"
           value={item.status}
           onChange={(e) => handleStatusChange(e.target.value as WatchlistItem["status"])}
         >
