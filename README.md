@@ -8,7 +8,7 @@ producto multi-tenant público.
 **App en producción**: https://episync-1.onrender.com/
 
 El diseño completo (arquitectura, modelo de datos, decisiones técnicas)
-vive en `SDD_EpisoSync.md`. Este README es la puerta de entrada práctica:
+vive en `SDD_EpiSync.md`. Este README es la puerta de entrada práctica:
 qué es, cómo se corre, y qué falta.
 
 ## Por qué existe
@@ -57,7 +57,7 @@ episync-mal/
 │       ├── context/                # tema (dark/light) y sesión (API key)
 │       └── lib/                    # cliente de API tipado, contra el contrato 1:1
 ├── pnpm-workspace.yaml
-└── SDD_EpisoSync.md                # diseño completo, léelo antes de tocar arquitectura
+└── SDD_EpiSync.md                   # diseño completo, léelo antes de tocar arquitectura
 ```
 
 ## Cómo se usa (flujo real)
